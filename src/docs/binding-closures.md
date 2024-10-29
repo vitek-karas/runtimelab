@@ -128,7 +128,7 @@ In running the other direction, we would need a way to convert a C# closure into
 
 # Idiomatic Differences
 
-The main idiomatic difference has to do with the escaping/non-escaping varieties of closure. Obviously, C# doesn't make this distinction. As such, if a C# method gets passed a delegate from Swift that is non-escaping, it incumbent upon the user to never store it. We can make this somewhat better by putting an attribute on such delegates that flags it as a non-escaping and create a Roslyn analyzer that looks for usage that would violate that.
+The main idiomatic difference has to do with the escaping/non-escaping varieties of closure. Obviously, C# doesn't make this distinction. As such, if a C# method gets passed a delegate from Swift that is non-escaping, it is incumbent upon the user to never store it. We can make this somewhat better by putting an attribute on such delegates that flags it as a non-escaping and create a Roslyn analyzer that looks for usage that would violate that.
 
 # Accessibility
 

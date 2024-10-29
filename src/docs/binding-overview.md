@@ -97,7 +97,7 @@ To keep things organized, each of the separate language features are broken out 
 - [enums](binding-enums.md)
 - [tuples](binding-tuples.md)
 - [protocols](binding-protocols.md)
-- protocols with associated types
+- [protocols with associated types](binding-pats.md)
 - [closures] (binding-closures.md)
 
 
