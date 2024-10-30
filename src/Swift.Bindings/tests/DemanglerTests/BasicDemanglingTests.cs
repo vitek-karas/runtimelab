@@ -60,17 +60,6 @@ public class BasicDemanglingTests : IClassFixture<BasicDemanglingTests.TestFixtu
     }
 
     [Fact]
-    public void TestFailMetadataAccessor()
-    {
-        var symbol = "_$s20GenericTestFramework6ThingyCMa";
-        var demangler = new Swift5Demangler (symbol);
-        var result = demangler.Run ();
-        var err = result as ReductionError;
-        Assert.NotNull(err);
-        Assert.Equal("No rule for node TypeMetadataAccessFunction", err.Message);
-    }
-
-    [Fact]
     public void TestNestedProtocolWitnessTable()
     {
         var symbol = "_$s20GenericTestFramework3FooC6ThingyCAA8IsItRealAAWP";
@@ -210,4 +199,27 @@ public class BasicDemanglingTests : IClassFixture<BasicDemanglingTests.TestFixtu
         Assert.Equal ("Swift.Int", returnType.Name);
     }
 
+
+    [Fact]
+    public void TestMetadataAccessor()
+    {
+        var symbol = "_$s22GeneralHackingNonsense12ThisIsAClassCMa";
+        var demangler = new Swift5Demangler (symbol);
+        var result = demangler.Run ();
+        var metadataAccessor = result as MetadataAccessorReduction;
+        Assert.NotNull (metadataAccessor);
+        Assert.Equal ("GeneralHackingNonsense.ThisIsAClass", metadataAccessor.TypeSpec.Name);
+    }
+
+
+    [Fact]
+    public void TestGenericMetadataAccessor()
+    {
+        var symbol = "_$s22GeneralHackingNonsense6DupletVMa";
+        var demangler = new Swift5Demangler (symbol);
+        var result = demangler.Run ();
+        var metadataAccessor = result as MetadataAccessorReduction;
+        Assert.NotNull (metadataAccessor);
+        Assert.Equal ("GeneralHackingNonsense.Duplet", metadataAccessor.TypeSpec.Name);
+    }
 }

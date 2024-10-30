@@ -137,6 +137,14 @@ internal class Swift5Reducer {
                 }
             }
         },
+        new MatchRule() {
+            Name = "TypeMetadataAccessFunction", NodeKind = NodeKind.TypeMetadataAccessFunction, Reducer = ConvertMetadataAcessor,
+            ChildRules = new List<MatchRule> () {
+                new MatchRule () {
+                    Name = "Type", NodeKind = NodeKind.Type, Reducer = MatchRule.ErrorReducer
+                }
+            }
+        },
     };
 
     /// <summary>
@@ -470,6 +478,33 @@ internal class Swift5Reducer {
             return DispatchThunkFunctionReduction.FromFunctionReduction (funcReduction);
         } else {
             return ReductionError (ExpectedButGot ("FunctionReduction in DispatchThunk", childReduction.GetType ().Name, mangledName), mangledName);
+        }
+    }
+
+    /// <summary>
+    /// ConvertMetadataAcessor converts a TypeMetadataAccessor node to a MetadataAccessorReduction.
+    /// </summary>
+    /// <param name="node">A TypeMetadataAccessor node</param>
+    /// <param name="mangledName">the mangled name that generated the Node</param>
+    /// <returns>A MetadataAccessorReduction</returns>
+    static IReduction ConvertMetadataAcessor (Node node, string mangledName)
+    {
+        // Expecting:
+        // TypeMetadataAccessFunction
+        //    Type
+        //       nominal type
+        var childReduction = ConvertFirstChild (node, mangledName);
+        if (childReduction is ReductionError error)
+            return error;
+        if (childReduction is TypeSpecReduction typeSpec)
+        {
+            if (typeSpec.TypeSpec is NamedTypeSpec ns) {
+                return new MetadataAccessorReduction () { Symbol = mangledName, TypeSpec = ns };
+            } else {
+                return ReductionError (ExpectedButGot ("NamedTypeSpec in MetadataAccessor", typeSpec.TypeSpec.GetType ().Name, mangledName), mangledName);
+            }
+        } else {
+            return ReductionError (ExpectedButGot ("TypeSpecReduction in Metadata Accessor", childReduction.GetType ().Name, mangledName), mangledName);
         }
     }
 
