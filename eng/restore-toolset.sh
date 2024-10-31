@@ -11,14 +11,11 @@ function InstallWorkloads {
     fi
 
     # This workload requires Xcode 15.4
-    dotnet workload install maccatalyst --version 9.0.100-rc.1.24453.3 --source https://api.nuget.org/v3/index.json
-
-    if [[ $? != 0 ]]; then
-        Write-PipelineTelemetryError -category 'InitializeToolset' "Failed to install workloads."
-        ExitWithExitCode 1
+    if ! dotnet workload install maccatalyst --version 9.0.100-rc.1.24453.3 --source https://api.nuget.org/v3/index.json; then
+        echo "Failed to install workloads. Skipping..."
+    else
+        echo "Workloads installed successfully."
     fi
-
-    echo "Workloads installed successfully."
 
     return 0
 }
