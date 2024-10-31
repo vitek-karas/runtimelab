@@ -42,6 +42,20 @@ public class TypeSpecReduction : IReduction {
 }
 
 /// <summary>
+/// Represents a reduction for a metadata acessor function.
+/// </summary>
+public class MetadataAccessorReduction : IReduction {
+    /// <summary>
+    /// Returns a the mangled symbol associated with a reduction
+    /// </summary>
+    public required string Symbol { get; init; }
+    /// <summary>
+    /// Returns a NameTypeSpec for the type hosting the metadata
+    /// </summary>
+    public required NamedTypeSpec TypeSpec { get; init; }
+}
+
+/// <summary>
 /// Represents a reduction that reduces to a Swift function
 /// </summary>
 public class FunctionReduction : IReduction {
