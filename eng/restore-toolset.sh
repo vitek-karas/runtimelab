@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 function InstallWorkloads {
-    if [[ "$(id -u)" -ne 0 ]]; then
+    if [[ "$(whoami)" != "root" ]]; then
         echo "No sudo privileges detected. Skipping dotnet workload install..."
     else
         # Check if dotnet is installed
