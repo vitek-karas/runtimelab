@@ -1,4 +1,4 @@
-# Overview of Binding
+# Overview of Binding Swift Types
 
 Binding is the process of making Swift code available to C#. This means being able to access Swift types from C# as well as being able to make a set of C# types available to Swift. In this process there are a number of things that need to be taken into consideration:
 - Language parity mismatches
