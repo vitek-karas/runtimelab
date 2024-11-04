@@ -158,6 +158,7 @@ For the Type -> TypeMetadata half, there should be a strategy mechanism that han
 - for tuples, there is a Swift library routine, `swift_getTupleTypeMetadata`
 - for closures, there is a Swift library routine, `swift_getFunctionTypeMetadata`
 - for existential containers, there is a Swift library routine, `swift_getExistentialTypeMetadata`
+- for types with generics, there is a Swift library routine, `swift_getGenericMetadata` and `swift_getOpaqueTypeMetadata`
 
 For the TypeMetadata -> Type half, this is a little more problematic. For nominal types, we can using the type name for looking up the matching C# type in a runtime type database, but it is entirely possible to encounter types that have no exposure in C# through binding. Under those circumstances, we may just be stuck with an approximation. This means that if we're presented with a class type that we've not seen, we would have to report it as either a proxy type if it's presented as implementing a particular protocol or as a broad placeholder with no real bindings to the original type. Under these circumstances, since the type mapping is no longer 1 to 1, these fallback cases should never go in the main cache, but could/should live in a secondary cache.
 
