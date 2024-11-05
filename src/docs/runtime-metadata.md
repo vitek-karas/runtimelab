@@ -56,7 +56,7 @@ public enum TypeMetadataRequest {
     Complete = 0,
     NonTransitiveComplete = 1,
     LayoutComplete = 0x3f,
-    Abstract = 0xff;
+    Abstract = 0xff,
     IsNotBlocking = 0x100,
 }
 
