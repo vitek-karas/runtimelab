@@ -218,7 +218,7 @@ public class SomeBoundType : ISwiftTyped {
     static TypeMetadata ISwiftTyped.GetMetadata()
     {
         if (_metadata is null) {
-            _metadata = SomeBoundTypePinvokes.MetadataAccessor (MetadataRequest.Complete);
+            _metadata = SomeBoundTypePinvokes.MetadataAccessor (TypeMetadataRequest.Complete);
         }
         return _metadata;
     }
