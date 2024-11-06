@@ -26,7 +26,7 @@ public interface IExistentialContainer {
     NativeHandle this [int index] { get; set; } // this[] and Count could just as easily be IEnumerable<NativeHandle>
     int Count { get; }
     int Sizeof { get; }
-    unsafe IntPtr CopyTo (IntPtr memory);
+    IntPtr CopyTo (IntPtr memory);
     void CopyTo <T>(ref T container) where T : IExistentialContainer;
 }
 ```
@@ -54,7 +54,7 @@ public interface IClassExistentialContainer {
     NativeHandle this [int index] { get; set; } // this and count could just as easily by IEnumerable<NativeHandle>
     int Count { get; }
     int Sizeof { get; }
-    unsafe IntPtr CopyTo (IntPtr memory);
+    IntPtr CopyTo (IntPtr memory);
     void CopyTo <T>(ref T container) where T : IExistentialContainer;
 }
 ```
