@@ -19,14 +19,23 @@ Because of the memory issues, existential containers need to be handled with att
 To start, we want to be able to operate on existential containers in the abstract. Therefore all existential containers should implement a common interface:
 ```csharp
 public interface IExistentialContainer {
-    IntPtr Data0 { get; set; }
-    IntPtr Data1 { get; set; }
-    IntPtr Data2 { get; set; }
-    SwiftTypeMetadata ObjectMetadata { get; set; }
+    // These 3 elements hold the payload of the existential type
+    IntPtr Payload0 { get; set; }
+    IntPtr Payload1 { get; set; }
+    IntPtr Payload2 { get; set; }
+    // This is the type metadata of the object in the payload. The type metadata will determine
+    // whether or not the payload contains the actual object or a heap-allocated copy. This is done by
+    // looking at the value witness table, if it's a value type, which has a field for the type's size
+    TypeMetadata ObjectMetadata { get; set; }
+    // an indexer into each of the value witness tables
     NativeHandle this [int index] { get; set; } // this[] and Count could just as easily be IEnumerable<NativeHandle>
+    // the number of value witness tables
     int Count { get; }
-    int Sizeof { get; }
+    // the size of this in MACHINE WORDS not bytes
+    int SizeOf { get; }
+    // Copy the existential container into memory, returns memory
     IntPtr CopyTo (IntPtr memory);
+    // Copy the contents of this into the supplied container. Throws if container doesn't match the size of this
     void CopyTo <T>(ref T container) where T : IExistentialContainer;
 }
 ```
