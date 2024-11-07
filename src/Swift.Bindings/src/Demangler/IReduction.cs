@@ -29,7 +29,7 @@ public class ReductionError : IReduction {
     /// <summary>
     /// Returns the severity of the error
     /// </summary>
-    public ReductErrorSeverity Severity { get; set; } = ReductErrorSeverity.Low;
+    public ReductionErrorSeverity Severity { get; set; } = ReductionErrorSeverity.Low;
 }
 
 /// <summary>

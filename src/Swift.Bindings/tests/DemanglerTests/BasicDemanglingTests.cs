@@ -231,6 +231,6 @@ public class BasicDemanglingTests : IClassFixture<BasicDemanglingTests.TestFixtu
         var result = demangler.Run();
         var error = result as ReductionError;
         Assert.NotNull (error);
-        Assert.Equal (ReductErrorSeverity.Low, error.Severity);
+        Assert.Equal (ReductionErrorSeverity.Low, error.Severity);
     }    
 }

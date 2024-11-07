@@ -384,7 +384,7 @@ public enum SymbolicReferenceKind {
 /// <summary>
 /// Represents the severity of a reduction error
 /// </summary>
-public enum ReductErrorSeverity {
+public enum ReductionErrorSeverity {
 	/// <summary>
 	/// A low severity error that can be ignored
 	/// </summary>
