@@ -31,7 +31,7 @@ public interface IExistentialContainer {
     NativeHandle this [int index] { get; set; } // this[] and Count could just as easily be IEnumerable<NativeHandle>
     // the number of value witness tables
     int Count { get; }
-    // the size of this in MACHINE WORDS not bytes
+    // the size of this in bytes
     int SizeOf { get; }
     // Copy the existential container into memory, returns memory
     IntPtr CopyTo (IntPtr memory);
