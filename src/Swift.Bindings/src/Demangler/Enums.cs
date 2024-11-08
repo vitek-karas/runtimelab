@@ -380,3 +380,17 @@ internal enum MatchNodeContentType {
 public enum SymbolicReferenceKind {
 	Context,
 }
+
+/// <summary>
+/// Represents the severity of a reduction error
+/// </summary>
+public enum ReductionErrorSeverity {
+	/// <summary>
+	/// A low severity error that can be ignored
+	/// </summary>
+	Low = 0,
+	/// <summary>
+	/// A high severity error that should not be ignored
+	/// </summary>
+	High,
+}
