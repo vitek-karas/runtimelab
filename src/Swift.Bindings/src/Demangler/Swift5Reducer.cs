@@ -145,6 +145,30 @@ internal class Swift5Reducer {
                 }
             }
         },
+        new MatchRule() {
+            Name = "BoundGenericNominal", NodeKindList = new List<NodeKind> () { NodeKind.BoundGenericEnum, NodeKind.BoundGenericClass, NodeKind.BoundGenericStructure },
+            Reducer = ConvertBoundGenericNominal,
+            ChildRules = new List<MatchRule> () {
+                new MatchRule () {
+                    Name = "BoundGenericNominalType", NodeKind = NodeKind.Type, Reducer = MatchRule.ErrorReducer
+                },
+                new MatchRule () {
+                    Name = "BoundGenericNominalTypeList", NodeKind = NodeKind.TypeList, Reducer = MatchRule.ErrorReducer
+                }
+            }
+        },
+        new MatchRule() {
+            Name = "DependentGenericParameter", NodeKind = NodeKind.DependentGenericParamType,
+            Reducer = ConvertDependentGenericParameter
+        },
+        new MatchRule() {
+            Name = "DependentMemberType", NodeKind = NodeKind.DependentMemberType, Reducer = ConvertDependentMember,
+            ChildRules = new List<MatchRule> () {
+                new MatchRule {
+                    Name = "DependentMemberSubType", NodeKind = NodeKind.Type, Reducer = MatchRule.ErrorReducer
+                }
+            }
+        },
     };
 
     /// <summary>
@@ -524,6 +548,109 @@ internal class Swift5Reducer {
             }
         } else {
             return ReductionErrorHigh (ExpectedButGot ("TypeSpecReduction in Metadata Accessor", childReduction.GetType ().Name, mangledName), mangledName);
+        }
+    }
+
+    /// <summary>
+    /// Convert a bound generic nominal type to a named type spec
+    /// </summary>
+    /// <param name="node">A bound generic struct, class, or enum node</param>
+    /// <param name="mangledName">the mangled name that generated the Node</param>
+    /// <returns>A TypeSpectReduction with a named typed spec</returns>
+    static IReduction ConvertBoundGenericNominal (Node node, string mangledName)
+    {
+        // Expecting:
+        // Type
+        //   nominal type
+        // TypeList
+        //   Type0
+        //   ...
+        //   TypeN
+
+        var hostTypeReduction = ConvertFirstChild (node.Children [0], mangledName);
+        if (hostTypeReduction is ReductionError err0) {
+            return err0;
+        } else if (hostTypeReduction is TypeSpecReduction hostType) {
+            try {
+                var typeList = ConvertTypeListToTypeSpecList (node.Children [1], mangledName);
+                hostType.TypeSpec.GenericParameters.AddRange (typeList);
+                return hostType;
+            } catch (Exception error) {
+                return ReductionErrorLow ($"Error converting bound generic type list: {error.Message}", mangledName);
+            }
+        } else {
+            return ReductionErrorLow (ExpectedButGot ("TypeSpecReduction in BoundGenericNominal", hostTypeReduction.GetType ().Name, mangledName), mangledName);
+        }
+    }
+
+    /// <summary>
+    /// Converts a TypeList node into a List<TypeSpec>
+    /// </summary>
+    /// <param name="node">A Node of type TypeList</param>
+    /// <param name="mangledName">the mangled name that generated the Node</param>
+    /// <returns>A list of TypeSpec</returns>
+    /// <exception cref="Exception">Throws on error in convertsion</exception>
+    static List<TypeSpec> ConvertTypeListToTypeSpecList (Node node, string mangledName)
+    {
+        var typeList = new List<TypeSpec> ();
+        var index = 0;
+        foreach (var child in node.Children) {
+            var reduction = Convert (child, mangledName);
+            if (reduction is ReductionError err) {
+                throw new Exception ($"Failed to convert type list child {index} of type {child.Kind}");
+            } else if (reduction is TypeSpecReduction childType) {
+                typeList.Add (childType.TypeSpec);
+            } else {
+                throw new Exception ($"Failed to convert type list child {index}. Expected a TypeSpecReduction but got a {reduction.GetType ().Name}");
+            }
+            index++;
+        }
+        return typeList;
+    }
+
+    /// <summary>
+    /// Converts a dependent generic parameter to a TypeSpecReduction
+    /// </summary>
+    /// <param name="node">A Node of type DependentGenericParameterType</param>
+    /// <param name="mangledName">the mangled name that generated the Node</param>
+    /// <returns>A TypeSpecReduction containing a NamedTypeSpec</returns>
+    static IReduction ConvertDependentGenericParameter (Node node, string mangledName)
+    {
+        // Expecting:
+        //  Index - depth
+        //  Index - index
+
+        var depth = node.Children [0].Index;
+        var index = node.Children [1].Index;
+        var named = new NamedTypeSpec ($"T_{depth}_{index}");
+        return new TypeSpecReduction () { Symbol = mangledName, TypeSpec = named };
+    }
+
+    /// <summary>
+    /// Converts a dependent member with optional associated type path to a TypeSpecReduction
+    /// </summary>
+    /// <param name="node">A Node of type DependentMemberType</param>
+    /// <param name="mangledName">the mangled name that generated the Node</param>
+    /// <returns>A TypeSpecReduction containing a NamedTypeSpec</returns>
+    static IReduction ConvertDependentMember (Node node, string mangledName)
+    {
+        // Expected:
+        // Type
+        // [DependentAssociatedTypeRef]
+        var childReduction = ConvertFirstChild (node, mangledName);
+        if (childReduction is ReductionError error)
+            return error;
+        else if (childReduction is TypeSpecReduction hostType) {
+            if (node.Children.Count < 2)
+                return hostType;
+            if (hostType.TypeSpec is NamedTypeSpec ns) {
+                var newNS = new NamedTypeSpec ($"{ns.ToString ()}.{node.Children [1].Text}");
+                return new TypeSpecReduction () { Symbol = mangledName, TypeSpec = newNS };
+            } else {
+                return ReductionErrorLow (ExpectedButGot ("NamedTypeSpec in TypeSpecReduction", hostType.TypeSpec.GetType ().Name, mangledName), mangledName);
+            }
+        } else {
+            return ReductionErrorLow (ExpectedButGot ("TypeSpecReduction in DependentMember", childReduction.GetType().Name, mangledName), mangledName);
         }
     }
 

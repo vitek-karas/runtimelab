@@ -28,8 +28,8 @@ public class BasicDemanglingTests : IClassFixture<BasicDemanglingTests.TestFixtu
     public void TestProtocolWitnessTable()
     {
         var symbol = "_$s20GenericTestFramework6ThingyCAA7StanleyAAWP";
-        var demangler = new Swift5Demangler (symbol);
-        var result = demangler.Run ();
+        var demangler = new Swift5Demangler ();
+        var result = demangler.Run (symbol);
         var protoWitnessReduction = result as ProtocolWitnessTableReduction;
         Assert.NotNull(protoWitnessReduction);
         Assert.Equal("GenericTestFramework.Thingy", protoWitnessReduction.ImplementingType.Name);
@@ -40,8 +40,8 @@ public class BasicDemanglingTests : IClassFixture<BasicDemanglingTests.TestFixtu
     public void TestOtherProtocolWitnessTable()
     {
         var symbol = "_$s20GenericTestFramework6ThingyCAA8IsItRealAAWP";
-        var demangler = new Swift5Demangler (symbol);
-        var result = demangler.Run ();
+        var demangler = new Swift5Demangler ();
+        var result = demangler.Run (symbol);
         var protoWitnessReduction = result as ProtocolWitnessTableReduction;
         Assert.NotNull(protoWitnessReduction);
         Assert.Equal("GenericTestFramework.Thingy", protoWitnessReduction.ImplementingType.Name);
@@ -52,8 +52,8 @@ public class BasicDemanglingTests : IClassFixture<BasicDemanglingTests.TestFixtu
     public void TestFailDemangleNonsense()
     {
         var symbol = "_$ThisIsJustGarbage";
-        var demangler = new Swift5Demangler (symbol);
-        var result = demangler.Run ();
+        var demangler = new Swift5Demangler ();
+        var result = demangler.Run (symbol);
         var err = result as ReductionError;
         Assert.NotNull(err);
         Assert.Equal("No rule for node FirstElementMarker", err.Message);
@@ -63,8 +63,8 @@ public class BasicDemanglingTests : IClassFixture<BasicDemanglingTests.TestFixtu
     public void TestNestedProtocolWitnessTable()
     {
         var symbol = "_$s20GenericTestFramework3FooC6ThingyCAA8IsItRealAAWP";
-        var demangler = new Swift5Demangler (symbol);
-        var result = demangler.Run ();
+        var demangler = new Swift5Demangler ();
+        var result = demangler.Run (symbol);
         var protoWitnessReduction = result as ProtocolWitnessTableReduction;
         Assert.NotNull(protoWitnessReduction);
         Assert.Equal("GenericTestFramework.Foo.Thingy", protoWitnessReduction.ImplementingType.Name);
@@ -75,8 +75,8 @@ public class BasicDemanglingTests : IClassFixture<BasicDemanglingTests.TestFixtu
     public void TestOtherProtocolConformanceDescriptor()
     {
         var symbol = "_$s10someclient14CSAgeableProxyCAA7AgeableAAMc";
-        var demangler = new Swift5Demangler (symbol);
-        var result = demangler.Run ();
+        var demangler = new Swift5Demangler ();
+        var result = demangler.Run (symbol);
         var conf = result as ProtocolConformanceDescriptorReduction;
         Assert.NotNull(conf);
         Assert.Equal("someclient.CSAgeableProxy", conf.ImplementingType.Name);
@@ -88,8 +88,8 @@ public class BasicDemanglingTests : IClassFixture<BasicDemanglingTests.TestFixtu
     public void TestFuncWithTuple()
     {
         var symbol = "_$s17unitHelpFrawework10ReturnsInt3arg1cS2u1a_Si1bt_SitF";
-        var demangler = new Swift5Demangler (symbol);
-        var result = demangler.Run ();
+        var demangler = new Swift5Demangler ();
+        var result = demangler.Run (symbol);
         var func = result as FunctionReduction;
         Assert.NotNull (func);
         Assert.Equal ("ReturnsInt", func.Function.Name);
@@ -113,8 +113,8 @@ public class BasicDemanglingTests : IClassFixture<BasicDemanglingTests.TestFixtu
     public void TestDispatchThunkFunc()
     {
         var symbol = "_$s22GeneralHackingNonsense12ThisIsAClassC12identityFunc1aS2i_tFTj";
-        var demangler = new Swift5Demangler (symbol);
-        var result = demangler.Run ();
+        var demangler = new Swift5Demangler ();
+        var result = demangler.Run (symbol);
         var thunk = result as DispatchThunkFunctionReduction;
         Assert.NotNull (thunk);
         var provenance = thunk.Function.Provenance;
@@ -131,8 +131,8 @@ public class BasicDemanglingTests : IClassFixture<BasicDemanglingTests.TestFixtu
     public void TestDispatchThunkFuncAllocator()
     {
         var symbol = "_$s22GeneralHackingNonsense12ThisIsAClassCACycfCTj";
-        var demangler = new Swift5Demangler (symbol);
-        var result = demangler.Run ();
+        var demangler = new Swift5Demangler ();
+        var result = demangler.Run (symbol);
         var thunk = result as DispatchThunkFunctionReduction;
         Assert.NotNull (thunk);
         var provenance = thunk.Function.Provenance;
@@ -149,8 +149,8 @@ public class BasicDemanglingTests : IClassFixture<BasicDemanglingTests.TestFixtu
     public void TestFuncNoArgs()
     {
         var symbol = "_$s22GeneralHackingNonsense12ThisIsAClassC11returnSevenSiyF";
-        var demangler = new Swift5Demangler (symbol);
-        var result = demangler.Run ();
+        var demangler = new Swift5Demangler ();
+        var result = demangler.Run (symbol);
         var func = result as FunctionReduction;
         Assert.NotNull (func);
         var provenance = func.Function.Provenance;
@@ -166,8 +166,8 @@ public class BasicDemanglingTests : IClassFixture<BasicDemanglingTests.TestFixtu
     public void TestFuncNoLabels()
     {
         var symbol = "_$s22GeneralHackingNonsense12ThisIsAClassC22noPublicParameterNamesyS2i_SitF";
-        var demangler = new Swift5Demangler (symbol);
-        var result = demangler.Run ();
+        var demangler = new Swift5Demangler ();
+        var result = demangler.Run (symbol);
         var func = result as FunctionReduction;
         Assert.NotNull (func);
         var provenance = func.Function.Provenance;
@@ -185,8 +185,8 @@ public class BasicDemanglingTests : IClassFixture<BasicDemanglingTests.TestFixtu
     public void TestFuncFewLabels()
     {
         var symbol = "_$s22GeneralHackingNonsense12ThisIsAClassC23fewPublicParameterNames_1b_S2i_S2itF";
-        var demangler = new Swift5Demangler (symbol);
-        var result = demangler.Run ();
+        var demangler = new Swift5Demangler ();
+        var result = demangler.Run (symbol);
         var func = result as FunctionReduction;
         Assert.NotNull (func);
         var provenance = func.Function.Provenance;
@@ -204,8 +204,8 @@ public class BasicDemanglingTests : IClassFixture<BasicDemanglingTests.TestFixtu
     public void TestMetadataAccessor()
     {
         var symbol = "_$s22GeneralHackingNonsense12ThisIsAClassCMa";
-        var demangler = new Swift5Demangler (symbol);
-        var result = demangler.Run ();
+        var demangler = new Swift5Demangler ();
+        var result = demangler.Run (symbol);
         var metadataAccessor = result as MetadataAccessorReduction;
         Assert.NotNull (metadataAccessor);
         Assert.Equal ("GeneralHackingNonsense.ThisIsAClass", metadataAccessor.TypeSpec.Name);
@@ -216,8 +216,8 @@ public class BasicDemanglingTests : IClassFixture<BasicDemanglingTests.TestFixtu
     public void TestGenericMetadataAccessor()
     {
         var symbol = "_$s22GeneralHackingNonsense6DupletVMa";
-        var demangler = new Swift5Demangler (symbol);
-        var result = demangler.Run ();
+        var demangler = new Swift5Demangler ();
+        var result = demangler.Run (symbol);
         var metadataAccessor = result as MetadataAccessorReduction;
         Assert.NotNull (metadataAccessor);
         Assert.Equal ("GeneralHackingNonsense.Duplet", metadataAccessor.TypeSpec.Name);
@@ -227,10 +227,31 @@ public class BasicDemanglingTests : IClassFixture<BasicDemanglingTests.TestFixtu
     public void TestUnknownEntry()
     {
         var symbol = "_$ss5print_9separator10terminatoryypd_S2StFfA0_"; // default argument initializer
-        var demangler = new Swift5Demangler (symbol);
-        var result = demangler.Run();
+        var demangler = new Swift5Demangler ();
+        var result = demangler.Run(symbol);
         var error = result as ReductionError;
         Assert.NotNull (error);
         Assert.Equal (ReductionErrorSeverity.Low, error.Severity);
-    }    
+    }
+
+    [Fact]
+    public void TestConformanceWithGeneric()
+    {
+        var symbol = "_$sSayxGSlsMc";
+        var result = new Swift5Demangler ().Run (symbol);
+        var proto = result as ProtocolConformanceDescriptorReduction;
+        Assert.NotNull (proto);
+        Assert.Equal ("Swift.Array<T_0_0>", proto.ImplementingType.ToString ());
+        Assert.Equal ("Swift.Collection", proto.ProtocolType.ToString ());
+    }
+
+    [Fact]
+    public void TestGenericWithAssociatedType ()
+    {
+        var symbol = "_$ss16IndexingIteratorV4next7ElementQzSgyF";
+        var result = new Swift5Demangler ().Run (symbol);
+        var func = result as FunctionReduction;
+        Assert.NotNull (func);
+        Assert.Equal ("Swift.IndexingIterator.next() -> Swift.Optional<T_0_0.Element>", func.Function.ToString ());
+    }
 }
