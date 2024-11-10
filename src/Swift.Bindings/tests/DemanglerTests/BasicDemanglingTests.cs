@@ -254,4 +254,14 @@ public class BasicDemanglingTests : IClassFixture<BasicDemanglingTests.TestFixtu
         Assert.NotNull (func);
         Assert.Equal ("Swift.IndexingIterator.next() -> Swift.Optional<T_0_0.Element>", func.Function.ToString ());
     }
+
+    [Fact]
+    public void TestThrowFunc ()
+    {
+        var symbol = "_$ss15withUnsafeBytes2of_q_x_q_SWKXEtKr0_lF";
+        var result = new Swift5Demangler ().Run (symbol);
+        var func = result as FunctionReduction;
+        Assert.NotNull (func);
+        Assert.Equal ("Swift.withUnsafeBytes<T_0_0, T_0_1>(of: T_0_0, (Swift.UnsafeRawBufferPointer) throws -> T_0_1) -> T_0_1", func.Function.ToString ());
+    }
 }

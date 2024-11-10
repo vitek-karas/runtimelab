@@ -4,6 +4,7 @@
 using System.Text;
 using System.Net.Sockets;
 using System.CommandLine;
+using System.Text.RegularExpressions;
 
 namespace BindingsGeneration.Demangling;
 
@@ -70,8 +71,24 @@ internal class Swift5Reducer {
             }
         },
         new MatchRule() {
-            Name = "FunctionType", NodeKind = NodeKind.FunctionType, Reducer = ConvertFunctionType,
+            Name = "FunctionType", NodeKindList = new List<NodeKind> () { NodeKind.FunctionType, NodeKind.NoEscapeFunctionType },
+            Reducer = ConvertFunctionType,
             ChildRules = new List<MatchRule> () {
+                new MatchRule () {
+                    Name = "Arguments", NodeKind = NodeKind.ArgumentTuple, Reducer = MatchRule.ErrorReducer
+                },
+                new MatchRule () {
+                    Name = "ReturnType", NodeKind = NodeKind.ReturnType, Reducer = MatchRule.ErrorReducer
+                },
+            }
+        },
+        new MatchRule() {
+            Name = "FunctionType", NodeKindList = new List<NodeKind> () { NodeKind.FunctionType, NodeKind.NoEscapeFunctionType },
+            Reducer = ConvertFunctionTypeThrows,
+            ChildRules = new List<MatchRule> () {
+                new MatchRule () {
+                    Name = "ThrowsAnnotation", NodeKind = NodeKind.ThrowsAnnotation, Reducer = MatchRule.ErrorReducer
+                },
                 new MatchRule () {
                     Name = "Arguments", NodeKind = NodeKind.ArgumentTuple, Reducer = MatchRule.ErrorReducer
                 },
@@ -166,6 +183,17 @@ internal class Swift5Reducer {
             ChildRules = new List<MatchRule> () {
                 new MatchRule {
                     Name = "DependentMemberSubType", NodeKind = NodeKind.Type, Reducer = MatchRule.ErrorReducer
+                }
+            }
+        },
+        new MatchRule() {
+            Name = "DependentGenericType", NodeKind = NodeKind.DependentGenericType, Reducer = ConvertDependentGenericType,
+            ChildRules = new List<MatchRule> () {
+                new MatchRule {
+                    Name = "DependentGenericSignature", NodeKind = NodeKind.DependentGenericSignature, Reducer = MatchRule.ErrorReducer
+                },
+                new MatchRule {
+                    Name = "EmbeddedType", NodeKind = NodeKind.Type, Reducer = MatchRule.ErrorReducer
                 }
             }
         },
@@ -376,9 +404,57 @@ internal class Swift5Reducer {
         //    ReturnType
         //        Type
 
+        var noEscaping = node.Kind == NodeKind.NoEscapeFunctionType;
         var argTuple = node.Children [0];
         var @return = node.Children [1];
 
+        return ConvertFunctionMaybeThrows (argTuple, @return, false, noEscaping, mangledName);
+
+        // var reduction = ConvertFirstChild (argTuple, mangledName);
+        // if (reduction is ReductionError error)
+        //     return error;
+        // else if (reduction is TypeSpecReduction argsTypeSpecReduction) {
+        //     reduction = ConvertFirstChild (@return, mangledName);
+        //     if (reduction is ReductionError returnError)
+        //         return returnError;
+        //     else if (reduction is TypeSpecReduction returnTypeSpecReduction) {
+        //         var closure = new ClosureTypeSpec (argsTypeSpecReduction.TypeSpec, returnTypeSpecReduction.TypeSpec);
+        //         return new TypeSpecReduction () { Symbol = argsTypeSpecReduction.Symbol, TypeSpec = closure };
+        //     } else {
+        //         return ReductionErrorLow (ExpectedButGot ("TypeSpecReduction in function return type", reduction.GetType ().Name, mangledName), mangledName);
+        //     }            
+        // } else {
+        //     return ReductionErrorLow (ExpectedButGot ("TypeSpecReduction in argument tuple type", reduction.GetType ().Name, mangledName), mangledName);
+        // }
+    }
+
+    /// <summary>
+    /// Convert a FunctionType node that can throw into a TypeSpecReduction
+    /// </summary>
+    /// <param name="node">a FunctionType node</param>
+    /// <param name="mangledName">the mangled name that generated the Node</param>
+    /// <returns>A TypeSpecReduction</returns>
+    static IReduction ConvertFunctionTypeThrows (Node node, string mangledName)
+    {
+        // Expect:
+        // ThrowsAnnotation
+        // ArgumentTuple
+        // ReturnType
+        var noEscaping = node.Kind == NodeKind.NoEscapeFunctionType;
+        return ConvertFunctionMaybeThrows (node.Children [1], node.Children [2], true, noEscaping, mangledName);
+    }
+
+    /// <summary>
+    /// Converts an argument tuple and return type to a TypeSpecReduction
+    /// </summary>
+    /// <param name="argTuple">The function arguments Node</param>
+    /// <param name="return">The return type Node</param>
+    /// <param name="throws">Whether or not the function can throw</param>
+    /// <param name="noEscaping">Whether or not the function can't escape</param>
+    /// <param name="mangledName">the mangled name that generated the Node</param>
+    /// <returns>A TypeSpecReduction containing a ClosureTypeSpec</returns>
+    static IReduction ConvertFunctionMaybeThrows (Node argTuple, Node @return, bool throws, bool noEscaping, string mangledName)
+    {
         var reduction = ConvertFirstChild (argTuple, mangledName);
         if (reduction is ReductionError error)
             return error;
@@ -388,6 +464,9 @@ internal class Swift5Reducer {
                 return returnError;
             else if (reduction is TypeSpecReduction returnTypeSpecReduction) {
                 var closure = new ClosureTypeSpec (argsTypeSpecReduction.TypeSpec, returnTypeSpecReduction.TypeSpec);
+                closure.Throws = throws;
+                if (!noEscaping)
+                    closure.Attributes.Add (new TypeSpecAttribute ("escaping"));
                 return new TypeSpecReduction () { Symbol = argsTypeSpecReduction.Symbol, TypeSpec = closure };
             } else {
                 return ReductionErrorLow (ExpectedButGot ("TypeSpecReduction in function return type", reduction.GetType ().Name, mangledName), mangledName);
@@ -442,6 +521,7 @@ internal class Swift5Reducer {
                             args.Elements [i].TypeLabel = labels [i];
                     }
                     var function = new SwiftFunction () { Name = identifier, ParameterList = args, Provenance = provenance.Provenance, Return = closure.ReturnType };
+                    function.GenericParameters.AddRange (closure.GenericParameters);
                     return new FunctionReduction () { Symbol = mangledName, Function = function };
                 } else {
                     return ReductionErrorHigh (ExpectedButGot ("ClosureTypeSpec as Function Type", typeSpecReduction.TypeSpec.GetType ().Name, mangledName), mangledName);
@@ -622,7 +702,7 @@ internal class Swift5Reducer {
 
         var depth = node.Children [0].Index;
         var index = node.Children [1].Index;
-        var named = new NamedTypeSpec ($"T_{depth}_{index}");
+        var named = new NamedTypeSpec (FormatGenericParameter (depth, index));
         return new TypeSpecReduction () { Symbol = mangledName, TypeSpec = named };
     }
 
@@ -652,6 +732,55 @@ internal class Swift5Reducer {
         } else {
             return ReductionErrorLow (ExpectedButGot ("TypeSpecReduction in DependentMember", childReduction.GetType().Name, mangledName), mangledName);
         }
+    }
+
+    /// <summary>
+    /// Convert a dependent generic type into a TypeSpecReduction
+    /// </summary>
+    /// <param name="node">A Node of type DependentGenericType</param>
+    /// <param name="mangledName">the mangled name that generated the Node</param>
+    /// <returns>A TypeSpecReduction</returns>
+    static IReduction ConvertDependentGenericType (Node node, string mangledName)
+    {
+        // Expected
+        // DependentGenericSignature
+        //    DependentGenericParamCount - index = num of generic parameters
+        // Type
+
+        var reduction = Convert (node.Children [1], mangledName);
+        if (reduction is ReductionError error)
+            return error;
+        else if (reduction is TypeSpecReduction ts) {
+            var nArgs = node.Children [0].Children [0].Index;
+            ts.TypeSpec.GenericParameters.AddRange (GenerateGenericParameters (0, nArgs));
+            return reduction;
+        } else {
+            return ReductionErrorLow (ExpectedButGot ("TypeSpecReduction in DependentGenericType", reduction.GetType ().Name, mangledName), mangledName);
+        }
+    }
+
+    /// <summary>
+    /// Generate a series of generic parameters using the given depth and index
+    /// </summary>
+    /// <param name="depth">The depth coordinate of the parameter</param>
+    /// <param name="maxIndex">The maximum number of parameters to generate</param>
+    /// <returns>A sequence of NamedTypeSpec objects named for the spec</returns>
+    static IEnumerable<TypeSpec> GenerateGenericParameters (long depth, long maxIndex)
+    {
+        for (long i = 0; i < maxIndex; i++) {
+            yield return new NamedTypeSpec (FormatGenericParameter (depth, i));
+        }
+    }
+
+    /// <summary>
+    /// Formats a generic parameter for printing
+    /// </summary>
+    /// <param name="depth">The depth coordinate of the parameter</param>
+    /// <param name="index">The maximum number of parameters to generate</param>
+    /// <returns>A string in the form T_depth_index</returns>
+    static string FormatGenericParameter (long depth, long index)
+    {
+        return $"T_{depth}_{index}";
     }
 
     /// <summary>
