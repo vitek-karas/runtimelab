@@ -245,7 +245,7 @@ namespace BindingsGeneration.Demangling {
 			}
 		}
 
-		int GetManglingPrefixLength (string mangledName)
+		static int GetManglingPrefixLength (string mangledName)
 		{
 			if (string.IsNullOrEmpty (mangledName))
 				return 0;
@@ -256,7 +256,7 @@ namespace BindingsGeneration.Demangling {
 			return 0;
 		}
 
-		bool IsSwiftSymbol (string mangledName)
+		public static bool IsSwiftSymbol (string mangledName)
 		{
 			if (IsOldFunctionTypeMangling (mangledName))
 				return true;
@@ -269,7 +269,7 @@ namespace BindingsGeneration.Demangling {
 			return nameWithoutPrefix.StartsWith ("So", StringComparison.Ordinal) || nameWithoutPrefix.StartsWith ("Sc", StringComparison.Ordinal);
 		}
 
-		bool IsOldFunctionTypeMangling (string mangledName)
+		static bool IsOldFunctionTypeMangling (string mangledName)
 		{
 			return mangledName.StartsWith ("_T", StringComparison.Ordinal);
 		}

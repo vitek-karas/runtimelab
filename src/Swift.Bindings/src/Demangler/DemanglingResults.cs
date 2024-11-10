@@ -65,7 +65,7 @@ public class DemanglingResults
     {
         var nlistEntries = machOFiles.PublicSymbols (target);
         var demangler = new Swift5Demangler ();
-        var allReductions = nlistEntries.Select (nle => demangler.Run (nle.str)).ToArray ();
+        var allReductions = nlistEntries.Select (nle => nle.str).Where (Swift5Demangler.IsSwiftSymbol).Select (demangler.Run).ToArray ();
         return new DemanglingResults (allReductions);
     }
 
