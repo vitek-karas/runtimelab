@@ -83,8 +83,8 @@ namespace BindingsGeneration.Tests
                 var abis = MachO.GetArchitectures (_dylibPath);
                 var demanglingResults = DemanglingResults.FromFile (_dylibPath, abis[0]);
                 var highErrors = demanglingResults.Errors.Where (e => e.Severity == Demangling.ReductionErrorSeverity.High).ToArray ();
-                var any = demanglingResults.Errors.Any (err => err.Severity == Demangling.ReductionErrorSeverity.High);
-                Assert.False(any);
+                var highError = demanglingResults.Errors.FirstOrDefault (err => err.Severity == Demangling.ReductionErrorSeverity.High);
+                Assert.True (highError is null, highError?.Message ?? "no error");
             }
         }
     }
