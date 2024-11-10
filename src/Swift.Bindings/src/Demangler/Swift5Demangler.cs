@@ -480,7 +480,7 @@ namespace BindingsGeneration.Demangling {
 		{
 			foreach (var nd in children)
 				if (nd == null)
-					throw new ArgumentOutOfRangeException (nameof (children));
+					throw new ArgumentOutOfRangeException (nameof (children), $"Error while demangling {this.originalIdentifier}");
 			var node = new Node (kind);
 			node.Children.AddRange (children);
 			return node;
