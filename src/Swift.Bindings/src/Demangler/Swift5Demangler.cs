@@ -11,39 +11,43 @@ using System.Text;
 namespace BindingsGeneration.Demangling {
 	public class Swift5Demangler {
 		const int kMaxRepeatCount = 2048;
-		ulong offset;
-		string originalIdentifier;
+		string originalIdentifier = "";
 		Stack<Node> nodeStack = new Stack<Node> ();
 		List<Node> substitutions = new List<Node> ();
-		string text;
+		string text = "";
 		List<string> words = new List<string> ();
-		StringSlice slice;
+		StringSlice slice = new StringSlice ("");
 		bool isOldFunctionTypeMangling = false;
 
 		public Func<SymbolicReferenceKind, Directness, int, byte [], Node> SymbolicReferenceResolver { get; set; }
 
+		object runLock = new object ();
 		static string [] prefixes = {
 		    /*Swift 4*/   "_T0",
 		    /*Swift 4.x*/ "$S", "_$S",
 		    /*Swift 5+*/  "$s", "_$s"
     		};
 
-		Swift5Demangler ()
+		public Swift5Demangler ()
 		{
 		}
 
-
-		public Swift5Demangler (string mangledName, ulong offset = 0)
+		public IReduction Run (string mangledName)
 		{
-			originalIdentifier = mangledName;
-			this.offset = offset;
-			slice = new StringSlice (originalIdentifier);
-			slice.Advance (GetManglingPrefixLength (originalIdentifier));
+			lock (runLock) {
+				nodeStack.Clear ();
+				substitutions.Clear ();
+				words.Clear ();
+				originalIdentifier = mangledName;
+				slice = new StringSlice (originalIdentifier);
+				slice.Advance (GetManglingPrefixLength (originalIdentifier));
+				return Run ();
+			}
 		}
 
-		public IReduction Run ()
+		IReduction Run ()
 		{
-			Node topLevelNode = DemangleType (null);
+			var topLevelNode = DemangleType (null);
 			if (topLevelNode is not null && topLevelNode.IsAttribute() && nodeStack.Count >= 1) {
 				var attribute = ExtractAttribute (topLevelNode);
 				var nextReduction = Run ();
@@ -54,7 +58,7 @@ namespace BindingsGeneration.Demangling {
 			} else if (topLevelNode is not null) {
 				return Swift5Reducer.Convert (topLevelNode, originalIdentifier);
 			} else {
-				return new ReductionError () {Symbol = originalIdentifier,  Message = $"Unable to demangle {originalIdentifier}" };
+				return new ReductionError () {Symbol = originalIdentifier,  Message = $"Unable to demangle {originalIdentifier}", Severity = ReductionErrorSeverity.High };
 			}
 		}
 
@@ -241,7 +245,7 @@ namespace BindingsGeneration.Demangling {
 			}
 		}
 
-		int GetManglingPrefixLength (string mangledName)
+		static int GetManglingPrefixLength (string mangledName)
 		{
 			if (string.IsNullOrEmpty (mangledName))
 				return 0;
@@ -252,7 +256,7 @@ namespace BindingsGeneration.Demangling {
 			return 0;
 		}
 
-		bool IsSwiftSymbol (string mangledName)
+		public static bool IsSwiftSymbol (string mangledName)
 		{
 			if (IsOldFunctionTypeMangling (mangledName))
 				return true;
@@ -265,7 +269,7 @@ namespace BindingsGeneration.Demangling {
 			return nameWithoutPrefix.StartsWith ("So", StringComparison.Ordinal) || nameWithoutPrefix.StartsWith ("Sc", StringComparison.Ordinal);
 		}
 
-		bool IsOldFunctionTypeMangling (string mangledName)
+		static bool IsOldFunctionTypeMangling (string mangledName)
 		{
 			return mangledName.StartsWith ("_T", StringComparison.Ordinal);
 		}
@@ -476,7 +480,7 @@ namespace BindingsGeneration.Demangling {
 		{
 			foreach (var nd in children)
 				if (nd == null)
-					throw new ArgumentOutOfRangeException (nameof (children));
+					throw new ArgumentOutOfRangeException (nameof (children), $"Error while demangling {this.originalIdentifier}");
 			var node = new Node (kind);
 			node.Children.AddRange (children);
 			return node;

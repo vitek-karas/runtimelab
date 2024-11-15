@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics;
+using System.Text;
 
 namespace BindingsGeneration;
 
@@ -26,6 +27,11 @@ public class SwiftFunction {
     public required TupleTypeSpec ParameterList { get; init; }
 
     /// <summary>
+    /// Gets the generic parameters for this functions
+    /// </summary>
+    public List<TypeSpec> GenericParameters { get; private set; } = new List<TypeSpec> ();
+
+    /// <summary>
     /// Gets the return type of the function
     /// </summary>
     public required TypeSpec Return { get; init; }
@@ -39,10 +45,26 @@ public class SwiftFunction {
     {
         if (o is SwiftFunction other) {
             return Name == other.Name && Provenance.Equals (other.Provenance) &&
-                ParameterList.Equals (other.ParameterList) && Return.Equals (other.Return);
+                ParameterList.Equals (other.ParameterList) && Return.Equals (other.Return) && GenericsMatch (other.GenericParameters);
         } else {
             return false;
         }
+    }
+
+    /// <summary>
+    /// Returns true if and only if the GenericParameters match the given list
+    /// </summary>
+    /// <param name="otherGenerics"></param>
+    /// <returns>true if the generic parameters match</returns>
+    bool GenericsMatch (List<TypeSpec> otherGenerics)
+    {
+        if (GenericParameters.Count != otherGenerics.Count)
+            return false;
+        for (var i = 0; i < GenericParameters.Count; i++) {
+            if (!GenericParameters [i].Equals (otherGenerics [i]))
+                return false;
+        }
+        return true;
     }
 
     /// <summary>
@@ -55,5 +77,12 @@ public class SwiftFunction {
     /// Returns a string representation of the function
     /// </summary>
     /// <returns>a string representation of the function</returns>
-    public override string ToString () => $"{Provenance}.{Name}{ParameterList} -> {Return}";
+    public override string ToString () => $"{Provenance}.{Name}{GenericParameterString ()}{ParameterList} -> {Return}";
+    string GenericParameterString ()
+    {
+        if (GenericParameters.Count == 0) return "";
+        var sb = new StringBuilder ();
+        sb.Append("<").AppendJoin (", ", GenericParameters).Append (">");
+        return sb.ToString ();
+    }
 }

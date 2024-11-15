@@ -1,4 +1,5 @@
 using System.Security.Cryptography.X509Certificates;
+using BindingsGeneration.Demangling;
 using Xamarin;
 using Xunit;
 
@@ -75,6 +76,23 @@ namespace BindingsGeneration.Tests
                 var symbols = MachO.Read(_dylibPath).PublicSymbols(abis[0]);
                 var any = symbols.Any(sy => sy.IsPrivate);
                 Assert.False(any);
+            }
+
+            [Fact]
+            public static void NoHighErrors()
+            {
+                var abis = MachO.GetArchitectures (_dylibPath);
+                var demanglingResults = DemanglingResults.FromFile (_dylibPath, abis[0]);
+                var highErrors = demanglingResults.Errors.Where (e => e.Severity == Demangling.ReductionErrorSeverity.High).ToArray ();
+                var highError = demanglingResults.Errors.FirstOrDefault (err => err.Severity == Demangling.ReductionErrorSeverity.High);
+                Assert.True (highError is null, HighErrorToMessage (highError));
+            }
+
+            static string HighErrorToMessage (ReductionError err)
+            {
+                if (err is null)
+                    return "no error";
+                return $"Symbol {err.Symbol} -> {err.Message}";
             }
         }
     }
