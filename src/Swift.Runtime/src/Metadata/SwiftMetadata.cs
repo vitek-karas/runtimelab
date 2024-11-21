@@ -5,7 +5,7 @@ using System;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
 using System.Text;
-
+#if false
 namespace Swift.Runtime
 {
 	// Implementations are partially taken from https://github.com/chkn/Xamarin.SwiftUI and https://github.com/xamarin/binding-tools-for-swift/
@@ -424,3 +424,4 @@ namespace Swift.Runtime
 		}
 	}
 }
+#endif

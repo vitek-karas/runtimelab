@@ -62,14 +62,15 @@ namespace BindingsGeneration
             var moduleDecl = structDecl.ModuleDecl ?? throw new ArgumentNullException(nameof(structDecl.ParentDecl));
             // Retrieve type info from the type database
             var typeRecord = typeDatabase.Registrar.GetType(moduleDecl.Name, structDecl.Name);
-            SwiftTypeInfo? swiftTypeInfo = typeRecord?.SwiftTypeInfo;
+            TypeMetadata? metadata = typeRecord?.Metadata;
 
-            if (swiftTypeInfo.HasValue)
+            if (false && metadata.HasValue)
             {
                 unsafe
                 {
                     // Apply struct layout attributes
-                    writer.WriteLine($"[StructLayout(LayoutKind.Sequential, Size = {swiftTypeInfo.Value.ValueWitnessTable->Size})]");
+                    // TODO: refactor to use type metadata
+//                    writer.WriteLine($"[StructLayout(LayoutKind.Sequential, Size = {swiftTypeInfo.Value.ValueWitnessTable->Size})]");
                 }
             }
             writer.WriteLine($"public unsafe struct {structDecl.Name} {{");
@@ -99,30 +100,31 @@ namespace BindingsGeneration
         /// <summary>
         /// Verify field record with the Swift type information.
         /// </summary>
-        private unsafe bool VerifyFieldRecord(SwiftTypeInfo swiftTypeInfo, int fieldIndex, FieldDecl fieldDecl)
-        {
-            // Access the field descriptor using pointer arithmetic
-            FieldDescriptor* desc = (FieldDescriptor*)IntPtr.Add(
-                (IntPtr)(((StructDescriptor*)swiftTypeInfo.Metadata->TypeDescriptor))->NominalType.FieldsPtr.Target,
-                IntPtr.Size * fieldIndex
-            );
+        // TODO: Refactor to use TypeMetadata
+        // private unsafe bool VerifyFieldRecord(SwiftTypeInfo swiftTypeInfo, int fieldIndex, FieldDecl fieldDecl)
+        // {
+            // // Access the field descriptor using pointer arithmetic
+            // FieldDescriptor* desc = (FieldDescriptor*)IntPtr.Add(
+            //     (IntPtr)(((StructDescriptor*)swiftTypeInfo.Metadata->TypeDescriptor))->NominalType.FieldsPtr.Target,
+            //     IntPtr.Size * fieldIndex
+            // );
 
-            // Ensure the field number is within bounds
-            if (desc->NumFields <= fieldIndex)
-            {
-                return false;
-            }
+            // // Ensure the field number is within bounds
+            // if (desc->NumFields <= fieldIndex)
+            // {
+            //     return false;
+            // }
 
-            FieldRecord* fieldRecord = desc->GetFieldRecord(fieldIndex);
+            // FieldRecord* fieldRecord = desc->GetFieldRecord(fieldIndex);
 
-            // Check field name
-            if ((System.Runtime.InteropServices.Marshal.PtrToStringAnsi((IntPtr)fieldRecord->Name.Target) ?? string.Empty) != fieldDecl.Name)
-            {
-                return false;
-            }
+            // // Check field name
+            // if ((System.Runtime.InteropServices.Marshal.PtrToStringAnsi((IntPtr)fieldRecord->Name.Target) ?? string.Empty) != fieldDecl.Name)
+            // {
+            //     return false;
+            // }
 
-            return true;
-        }
+        //     return true;
+        // }
     }
 
     /// <summary>
