@@ -62,7 +62,7 @@ namespace Swift.Runtime
         /// <summary>
         /// The Swift runtime type information.
         /// </summary>
-        public TypeMetadata Metadata { get; set; }
+        public SwiftTypeInfo? SwiftTypeInfo { get; set; }
 
         /// <summary>
         /// The value indicating whether the type has been processed.
@@ -107,7 +107,7 @@ namespace Swift.Runtime
             {
                 Namespace = moduleName,
                 TypeIdentifier = typeIdentifier,
-                Metadata = TypeMetadata.Zero,
+                SwiftTypeInfo = null,
                 IsProcessed = false,
                 MetadataAccessor = string.Empty
             });

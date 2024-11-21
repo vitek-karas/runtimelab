@@ -274,17 +274,18 @@ namespace BindingsGeneration
 
             TypeDecl? decl = null;
             TypeRecord typeRecord = _typeDatabase.Registrar.RegisterType(node.ModuleName, node.Name);
+            IntPtr metadataPtr;
 
             switch (node.DeclKind)
             {
                 case "Struct":
                 case "Enum":
-                    // metadataPtr = DynamicLibraryLoader.invoke(_dylibPath, GetMetadataAccessor(node));
-                    // var swiftTypeInfo = new SwiftTypeInfo { MetadataPtr = metadataPtr };
                     // TODO: fix this code to not use static metadata objects if possible
+                    metadataPtr = DynamicLibraryLoader.invoke(_dylibPath, GetMetadataAccessor(node));
+                    var swiftTypeInfo = new SwiftTypeInfo { MetadataPtr = metadataPtr };
 
-                    if (node.DeclAttributes != null && Array.IndexOf(node.DeclAttributes, "Frozen") != -1) // && 
-                        // (!swiftTypeInfo.ValueWitnessTable->IsNonPOD || !swiftTypeInfo.ValueWitnessTable->IsNonBitwiseTakable))
+                    if (node.DeclAttributes != null && Array.IndexOf(node.DeclAttributes, "Frozen") != -1 && 
+                        (!swiftTypeInfo.ValueWitnessTable->IsNonPOD || !swiftTypeInfo.ValueWitnessTable->IsNonBitwiseTakable))
                     {
                         decl = CreateStructDecl(node, parentDecl, moduleDecl);
                     }
@@ -292,7 +293,7 @@ namespace BindingsGeneration
                     {
                         decl = CreateClassDecl(node, parentDecl, moduleDecl);
                     }
-//                    typeRecord.SwiftTypeInfo = swiftTypeInfo;
+                   typeRecord.SwiftTypeInfo = swiftTypeInfo;
                     break;
 
                 case "Class":
