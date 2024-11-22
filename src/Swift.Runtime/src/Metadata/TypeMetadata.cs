@@ -10,18 +10,19 @@ namespace Swift.Runtime;
 /// </summary>
 [Flags]
 public enum TypeMetadataFlags {
+    None = 0,
     /// <summary>
     /// The metadata is not an actual type
     /// </summary>
-    MetadataKindIsNonType = 0x400,
+    IsNonType = 0x400,
     /// <summary>
     /// The metadata doesn't live on the heap
     /// </summary>
-    MetadataKindIsNonHeap = 0x200,
+    IsNonHeap = 0x200,
     /// <summary>
     /// The type is private to the runtime
     /// </summary>
-    MetadataKindIsRuntimePrivate = 0x100,
+    IsRuntimePrivate = 0x100,
 }
 
 /// <summary>
@@ -35,59 +36,59 @@ public enum TypeMetadataKind {
     /// <summary>
     /// The metadata represents a struct
     /// </summary>
-    Struct = 0 | TypeMetadataFlags.MetadataKindIsNonHeap,
+    Struct = 0 | TypeMetadataFlags.IsNonHeap,
     /// <summary>
     /// The metadata represents an enum
     /// </summary>
-    Enum = 1 | TypeMetadataFlags.MetadataKindIsNonHeap,
+    Enum = 1 | TypeMetadataFlags.IsNonHeap,
     /// <summary>
     /// The metadata represents an optional type
     /// </summary>
-    Optional = 2 | TypeMetadataFlags.MetadataKindIsNonHeap,
+    Optional = 2 | TypeMetadataFlags.IsNonHeap,
     /// <summary>
     /// The metadata represents an non-swift class
     /// </summary>
-    ForeignClass = 3 | TypeMetadataFlags.MetadataKindIsNonHeap,
+    ForeignClass = 3 | TypeMetadataFlags.IsNonHeap,
     /// <summary>
     /// The metadata represents an opaque type
     /// </summary>
-    Opaque = 0 | TypeMetadataFlags.MetadataKindIsRuntimePrivate | TypeMetadataFlags.MetadataKindIsNonHeap,
+    Opaque = 0 | TypeMetadataFlags.IsRuntimePrivate | TypeMetadataFlags.IsNonHeap,
     /// <summary>
     /// The metadata represents a tuple
     /// </summary>
-    Tuple = 1 | TypeMetadataFlags.MetadataKindIsRuntimePrivate | TypeMetadataFlags.MetadataKindIsNonHeap,
+    Tuple = 1 | TypeMetadataFlags.IsRuntimePrivate | TypeMetadataFlags.IsNonHeap,
     /// <summary>
     /// The metadata represents a closure/function
     /// </summary>
-    Function = 2 | TypeMetadataFlags.MetadataKindIsRuntimePrivate | TypeMetadataFlags.MetadataKindIsNonHeap,
+    Function = 2 | TypeMetadataFlags.IsRuntimePrivate | TypeMetadataFlags.IsNonHeap,
     /// <summary>
     /// The metadata represents a protocol
     /// </summary>
-    Protocol = 3 | TypeMetadataFlags.MetadataKindIsRuntimePrivate | TypeMetadataFlags.MetadataKindIsNonHeap,
+    Protocol = 3 | TypeMetadataFlags.IsRuntimePrivate | TypeMetadataFlags.IsNonHeap,
     /// <summary>
     /// The metadata represents a type of a TypeMetadata type
     /// </summary>
-    Metatype = 4 | TypeMetadataFlags.MetadataKindIsRuntimePrivate | TypeMetadataFlags.MetadataKindIsNonHeap,
+    Metatype = 4 | TypeMetadataFlags.IsRuntimePrivate | TypeMetadataFlags.IsNonHeap,
     /// <summary>
     /// The metadata represents an Objective C wrapper
     /// </summary>
-    ObjCClassWrapper = 5 | TypeMetadataFlags.MetadataKindIsRuntimePrivate | TypeMetadataFlags.MetadataKindIsNonHeap,
+    ObjCClassWrapper = 5 | TypeMetadataFlags.IsRuntimePrivate | TypeMetadataFlags.IsNonHeap,
     /// <summary>
     /// The metadata represents a type of an existential container
     /// </summary>
-    ExistentialMetatype = 6 | TypeMetadataFlags.MetadataKindIsRuntimePrivate | TypeMetadataFlags.MetadataKindIsNonHeap,
+    ExistentialMetatype = 6 | TypeMetadataFlags.IsRuntimePrivate | TypeMetadataFlags.IsNonHeap,
     /// <summary>
     /// The metadata represents a heap local variable
     /// </summary>
-    HeapLocalVariable = 0 | TypeMetadataFlags.MetadataKindIsNonType,
+    HeapLocalVariable = 0 | TypeMetadataFlags.IsNonType,
     /// <summary>
     /// The metadata represents a generic heap local variable
     /// </summary>
-    HeapGenericLocalVariable = 0 | TypeMetadataFlags.MetadataKindIsNonType | TypeMetadataFlags.MetadataKindIsRuntimePrivate,
+    HeapGenericLocalVariable = 0 | TypeMetadataFlags.IsNonType | TypeMetadataFlags.IsRuntimePrivate,
     /// <summary>
     /// The metadata represents an error
     /// </summary>
-    ErrorObject = 1 | TypeMetadataFlags.MetadataKindIsNonType | TypeMetadataFlags.MetadataKindIsRuntimePrivate,
+    ErrorObject = 1 | TypeMetadataFlags.IsNonType | TypeMetadataFlags.IsRuntimePrivate,
     // Swift source code says that for fixed values, this will never exceed 0x7ff,
     // but all class types will be 0x800 and above
     /// <summary>
@@ -141,12 +142,12 @@ public readonly struct TypeMetadata : IEquatable<TypeMetadata> {
     public TypeMetadataKind Kind {
         get {
             ThrowOnInvalid ();
-			long val = ReadPointerSizedInt (handle);
-			if (val == 0)
-				return TypeMetadataKind.None;
-			if (val > kMaxDiscriminator)
-				return TypeMetadataKind.Class;
-			return (TypeMetadataKind)val;
+            long val = ReadPointerSizedInt (handle);
+            if (val == 0)
+            return TypeMetadataKind.None;
+            if (val > kMaxDiscriminator)
+                return TypeMetadataKind.Class;
+            return (TypeMetadataKind)val;
         }
     }
 

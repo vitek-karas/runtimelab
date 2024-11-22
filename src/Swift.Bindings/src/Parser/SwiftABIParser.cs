@@ -293,7 +293,7 @@ namespace BindingsGeneration
                     {
                         decl = CreateClassDecl(node, parentDecl, moduleDecl);
                     }
-                   typeRecord.SwiftTypeInfo = swiftTypeInfo;
+                    typeRecord.SwiftTypeInfo = swiftTypeInfo;
                     break;
 
                 case "Class":
