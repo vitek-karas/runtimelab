@@ -280,6 +280,7 @@ namespace BindingsGeneration
             {
                 case "Struct":
                 case "Enum":
+                    // TODO: fix this code to not use static metadata objects if possible
                     metadataPtr = DynamicLibraryLoader.invoke(_dylibPath, GetMetadataAccessor(node));
                     var swiftTypeInfo = new SwiftTypeInfo { MetadataPtr = metadataPtr };
 
