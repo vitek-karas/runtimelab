@@ -50,6 +50,10 @@ public enum TypeMetadataKind {
     /// </summary>
     ForeignClass = 3 | TypeMetadataFlags.IsNonHeap,
     /// <summary>
+    /// The metadata represents a foreign reference type
+    /// </summary>
+    ForeignReferenceType = 4 | TypeMetadataFlags.IsNonHeap,
+    /// <summary>
     /// The metadata represents an opaque type
     /// </summary>
     Opaque = 0 | TypeMetadataFlags.IsRuntimePrivate | TypeMetadataFlags.IsNonHeap,
@@ -64,7 +68,7 @@ public enum TypeMetadataKind {
     /// <summary>
     /// The metadata represents a protocol
     /// </summary>
-    Protocol = 3 | TypeMetadataFlags.IsRuntimePrivate | TypeMetadataFlags.IsNonHeap,
+    Existential = 3 | TypeMetadataFlags.IsRuntimePrivate | TypeMetadataFlags.IsNonHeap,
     /// <summary>
     /// The metadata represents a type of a TypeMetadata type
     /// </summary>
@@ -78,6 +82,14 @@ public enum TypeMetadataKind {
     /// </summary>
     ExistentialMetatype = 6 | TypeMetadataFlags.IsRuntimePrivate | TypeMetadataFlags.IsNonHeap,
     /// <summary>
+    /// The metadata represents an extended existential type
+    /// </summary>
+    ExtendedExistential = 7 | TypeMetadataFlags.IsRuntimePrivate | TypeMetadataFlags.IsNonHeap,
+    /// <summary>
+    /// The metadata represents the type Builtin.FixedArray
+    /// </summary>
+    FixedArray = 8 | TypeMetadataFlags.IsRuntimePrivate | TypeMetadataFlags.IsNonHeap,
+    /// <summary>
     /// The metadata represents a heap local variable
     /// </summary>
     HeapLocalVariable = 0 | TypeMetadataFlags.IsNonType,
@@ -89,6 +101,14 @@ public enum TypeMetadataKind {
     /// The metadata represents an error
     /// </summary>
     ErrorObject = 1 | TypeMetadataFlags.IsNonType | TypeMetadataFlags.IsRuntimePrivate,
+    /// <summary>
+    /// The metadata represents a heap-allocated task
+    /// </summary>
+    Task = 2 | TypeMetadataFlags.IsNonType | TypeMetadataFlags.IsRuntimePrivate,
+    /// <summary>
+    /// The metadata represents a non-task async job
+    /// </summary>
+    Job = 3 | TypeMetadataFlags.IsNonType | TypeMetadataFlags.IsRuntimePrivate,
     // Swift source code says that for fixed values, this will never exceed 0x7ff,
     // but all class types will be 0x800 and above
     /// <summary>
