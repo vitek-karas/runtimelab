@@ -172,6 +172,26 @@ public readonly struct TypeMetadata : IEquatable<TypeMetadata> {
     }
 
     /// <summary>
+    /// Returns a pointer to the value witness table for the given type
+    /// </summary>
+    public unsafe ValueWitnessTable *ValueWitnessTable => (ValueWitnessTable*)(*((IntPtr*)handle - 1));
+
+    /// <summary>
+    /// Returns the size of the Swift type in bytes
+    /// </summary>
+    public unsafe nuint Size => (*this.ValueWitnessTable).Size;
+
+    /// <summary>
+    /// Returns the stride of the Swift type in bytes
+    /// </summary>
+    public unsafe nuint Stride => (*this.ValueWitnessTable).Stride;
+    
+    /// <summary>
+    /// Returns the alignment of the Swift type
+    /// </summary>
+    public unsafe int Alignment => (*this.ValueWitnessTable).Alignment;
+
+    /// <summary>
     /// Reads a pointer sized integer from the location supplied
     /// </summary>
     /// <param name="p">a pointer to memory</param>

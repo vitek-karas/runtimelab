@@ -36,12 +36,10 @@ namespace Swift.Runtime
 		public IntPtr AssignWithTake;
 		public IntPtr GetEnumTagSinglePayload;
 		public IntPtr StoreEnumTagSinglePayload;
-		private IntPtr _Size;
-		private IntPtr _Stride;
+		public nuint Size;
+		public nuint Stride;
 		public ValueWitnessFlags Flags;
 		public uint ExtraInhabitantCount;
-        public int Size => _Size.ToInt32();
-        public int Stride => _Stride.ToInt32();
 		public int Alignment => (int)((Flags & ValueWitnessFlags.AlignmentMask) + 1);
 		public bool IsNonPOD => Flags.HasFlag (ValueWitnessFlags.IsNonPOD);
 		public bool IsNonBitwiseTakable => Flags.HasFlag (ValueWitnessFlags.IsNonBitwiseTakable);
