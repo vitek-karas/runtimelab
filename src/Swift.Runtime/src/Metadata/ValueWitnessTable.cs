@@ -41,8 +41,8 @@ namespace Swift.Runtime
 		public ValueWitnessFlags Flags;
 		public uint ExtraInhabitantCount;
 		public int Alignment => (int)((Flags & ValueWitnessFlags.AlignmentMask) + 1);
-		public bool IsNonPOD => Flags.HasFlag (ValueWitnessFlags.IsNonPOD);
-		public bool IsNonBitwiseTakable => Flags.HasFlag (ValueWitnessFlags.IsNonBitwiseTakable);
+		public bool IsNonPOD => (Flags & ValueWitnessFlags.IsNonPOD) != 0;
+		public bool IsNonBitwiseTakable => (Flags &ValueWitnessFlags.IsNonBitwiseTakable) != 0;
 		public bool HasExtraInhabitants => ExtraInhabitantCount != 0;
 	}
 }
