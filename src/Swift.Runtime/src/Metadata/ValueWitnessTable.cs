@@ -122,7 +122,7 @@ namespace Swift.Runtime
 		/// <summary>
 		/// Returns true if the value can NOT be copied bitwise.
 		/// </summary>
-		public bool IsNonBitwiseTakable => (Flags &ValueWitnessFlags.IsNonBitwiseTakable) != 0;
+		public bool IsNonBitwiseTakable => (Flags & ValueWitnessFlags.IsNonBitwiseTakable) != 0;
 
 		/// <summary>
 		/// Returns true if and only if the type has extra inhabitants.

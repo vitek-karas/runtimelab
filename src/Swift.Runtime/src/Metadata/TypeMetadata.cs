@@ -174,7 +174,7 @@ public readonly struct TypeMetadata : IEquatable<TypeMetadata> {
     /// <summary>
     /// Returns a pointer to the value witness table for the given type
     /// </summary>
-    public unsafe ValueWitnessTable *ValueWitnessTable => (ValueWitnessTable*)(*((IntPtr*)handle - 1));
+    public unsafe ValueWitnessTable *ValueWitnessTable => IsValid ? (ValueWitnessTable*)(*((IntPtr*)handle - 1)) : throw new NullReferenceException ("TypeMetadata is null");
 
     /// <summary>
     /// Returns the size of the Swift type in bytes
