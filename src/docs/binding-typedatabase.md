@@ -2,7 +2,7 @@
 
 In binding a Swift module, there will be nominal type references presented to the binder that have been bound previously. The binder will need to perform a few important operations on these types:
 
-1. Determine the C# type that should be used in the public-facing API and what namespaces need to be references
+1. Determine the C# type that should be used in the public-facing API and what namespaces need to be referenced
 2. Determine the size, stride, and alignment of value types that contain the type reference, if known at binding time.
 
 After binding the module, the binder will have new type database entries to write.
@@ -20,6 +20,7 @@ Here are the elements that are likely to be needed in a type database entry:
 - C# type name (may be a type path for inner types)
 - Swift entity type (stuct, enum, class, actor, protocol)
 - Whether or not the type is blitable
+- Whether or not the type is frozen
 
 (idea - maybe also include an optional C# pinvoke type)
 
@@ -40,7 +41,7 @@ public struct A {
 
 The first stage is type introduction. During this stage, the type database will be populated with a "light" version of the information available. The information that is available at this point is limited to the type names and the entity types.
 
-The second stage is type binding, wherein the actual C# type is generated. At this stage, it will be necessary to have the full information, in addition to other information about the types. As you see in the example above, it will be to either build a dependency graph to inform the binding order or to make the binding process recursive. The downside to makeing the binding process recursive is that it makes it more challenging to bind in parallel.
+The second stage is type binding, wherein the actual C# type is generated. At this stage, it will be necessary to have the full information, in addition to other information about the types. As you see in the example above, it will be to either build a dependency graph to inform the binding order or to make the binding process recursive. The downside to making the binding process recursive is that it makes it more challenging to bind in parallel.
 
 It might be useful in the binding process to have two data structures: one for the type database entry proper and one for the types that are being bound. The reason for this is that it will be useful for binding to have information about the type that wouldn't be needed in the type database. For example, at binding time, we will need information as to whether the type is frozen, OS availability, variety of enum, and so on.
 
