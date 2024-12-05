@@ -4,7 +4,7 @@ This document explores projections of Swift generics into C#.
 
 1. [Generic functions](#generic-functions)
 2. [Generic types](#generic-types)
-3. Generics with protocol constraints (TBD)
+3. [Generics with protocol constraints](#protocol-constraints)
 4. Generics with PAT constraints (TBD)
 5. Existential container for a protocol as a generic type (TBD)
 
@@ -90,7 +90,7 @@ public static unsafe T ReturnData<T>(T data)
         SwiftIndirectResult result = new SwiftIndirectResult(payload);
         
         NativeHandle dataPayload = Runtime.GetPayload(ref data);
-        PInvoke_ReturnData(result, dataPayload, metadata!.Value);
+        PInvoke_ReturnData(result, dataPayload, metadata);
         return Runtime.FromPayload<T>(payload); // Transfers ownership of the payload
     }
     catch
@@ -299,7 +299,7 @@ class Pair<T, U> : ISwiftObject
         var nativeHandleFirst = Runtime.GetPayload(ref first);
         var nativeHandleSecond = Runtime.GetPayload(ref second);
 
-        PairPInvokes.Pair(swiftIndirectResult, nativeHandleFirst, nativeHandleSecond, firstMetadata!.Value, secondMetadata!.Value);
+        PairPInvokes.Pair(swiftIndirectResult, nativeHandleFirst, nativeHandleSecond, firstMetadata, secondMetadata);
     }
 
     public static TypeMetadata Metadata
@@ -310,7 +310,7 @@ class Pair<T, U> : ISwiftObject
             var firstMetadata = GetTypeMetadataOrThrow<T>();
             var secondMetadata = GetTypeMetadataOrThrow<U>();
 
-            return PairPInvokes.PInvokeMetadata(TypeMetadataRequest.Complete, firstMetadata!.Value, secondMetadata!.Value);
+            return PairPInvokes.PInvokeMetadata(TypeMetadataRequest.Complete, firstMetadata, secondMetadata);
         }
     }
 
@@ -437,3 +437,235 @@ We could also consider solving this on the runtime level.
 ### Generic classes
 
 TBD
+
+## Protocol constraints
+
+This section describes how to project protocol constraints on generic type parameters from Swift to C\#. The goal here is not to describe full projections of protocols; for that, please refer to the [binding protocols doc](binding-protcols.md).
+
+A Swift protocol can be mapped to C\# as an interface. Then Swift generic parameters with protocol constraint can be mapped into C\# as generic parameters with interface constraint. This should work for both functions and types.
+
+### Protocol constraints on functions
+
+Consider the following simple example in Swift:
+
+```swift
+public protocol Printable {
+ func printMe()
+}
+
+public func printPrintable<T: Printable>(data: T) {
+ data.printMe()
+}
+
+// Equivalent to: public func printPrintable<T>(data: T) where T : Printable
+```
+
+When a function is declared with a generic argument, an extra implicit argument is added to the end representing the type metadata of the generic argument (see above). If that generic argument is constrained by one or more protocols, the type metadata is followed by a pointer to the protocol witness table for each protocol. In the case of multiple protocols, e.g. T: P3 & P1 & P2, the protocol witness tables are ordered lexically by fully qualified name of the protocol. For detailed description of Metadata accessor refer to [runtime metadata doc](runtime-metadata.md).
+
+This can be projected into C\# as follows:
+
+```csharp
+[SwiftProtocol("ModuleA", "Printable")] // New attribute which encapsulates information necessary to extract Protocol Conformance Descriptor
+public interface IPrintableProtocol
+{
+    public void PrintMe();
+
+}
+
+public static void PrintPrintable<T>(T data) where T : ISwiftObject, IPrintableProtocol
+{
+    var metadata = TypeMetadata.GetTypeMetadataOrThrow<T>();
+    var protocolWitnessTable = ProtocolWitnessTable.GetProtocolWitnessTableOrThrow<T, IPrintableProtocol>();
+    PrintPrintable(data.GetPayload(), metadata, protocolWitnessTable);
+}
+
+[DllImport(Path, EntryPoint = "...")]
+[UnmanagedCallConv(CallConvs = [typeof(CallConvSwift)])]
+private static extern void PInvokePrintPrintable(NativeHandle data, TypeMetadata metadata, ProtocolWitnessTable protocolWitnessTable);
+```
+
+This utilizes a new type `ProtocolWitnessTable` whose implementation might look something like:
+
+```csharp
+public record struct ProtocolWitnessTable
+{
+    NativeHandle handle;
+
+    internal ProtocolWitnessTable(NativeHandle handle)
+    {
+        this.handle = handle;
+    }
+
+    public NativeHandle Handle
+    {
+        get { return handle; }
+    }
+
+    public static ProtocolWitnessTable GetProtocolWitnessTable<T, U>() where T : ISwiftObject
+    {
+        var metadata = TypeMetadata.GetTypeMetadataOrThrow<T>();
+        var conformanceDescriptor = T.GetProtocolConformanceDescriptor<U>();
+        return new ProtocolWitnessTable(Runtime.GetProtocolWitnessTable(conformanceDescriptor, metadata));
+    }
+}
+```
+
+This would require adding a new method to `ISwiftObject`.
+
+```csharp
+public interface ISwiftObject
+    public static abstract NativeHandle GetProtocolConformanceDescriptor<T>();
+```
+
+**NOTE:** Here an assumption is made -- we will only need PWTs of things which implement the `ISwiftObject` interface.
+
+Then a type implementing the interface could look like:
+
+```csharp
+[StructLayout(LayoutKind.Sequential, Size = /* Extract size */)]
+struct FrozenStruct : ISwiftObject, IPrintableProtocol
+{
+    // Other members
+
+    public static NativeHandle GetProtocolConformanceDescriptor<T>()
+    {
+        TypeInfo typeInfo = typeof(T).GetTypeInfo();
+
+        var protocolAttribute = typeInfo.GetCustomAttribute<SwiftProtocolAttribute>();
+        if (protocolAttribute == null)
+        {
+            throw new InvalidOperationException($"Type {typeof(T).Name} does not have a SwiftProtocol attribute");
+        }
+
+        // Use information from protocolAttribute to correctly extract the conformance descriptor
+        return GetProtocolConformanceDescriptor(...);
+    }
+
+    public void PrintMe()
+    {
+        var self = new SwiftSelf<FrozenStruct>(this);
+        PInvokePrintMe(self);
+    }
+}
+```
+
+### Protocol constraints on types
+
+Adding constraints on a type's generic parameters is also straightforward, with small adjustments necessary to the initializer and metadata accessor functions. Let's revisit the `Pair` example:
+
+```swift
+public struct Pair<T: Printable, U: Printable> { 
+    public var first: T 
+    public var second: U
+ 
+    public init(first: T, second: U) { 
+        self.first = first 
+        self.second = second 
+    }
+
+    public func printMe() {
+        self.first.printMe()
+        self.second.printMe()
+    }
+}
+```
+
+The corresponding C\# projection would be:
+
+```csharp
+class Pair<T, U> : ISwiftObject
+    where T : ISwiftObject, IPrintableProtocol
+    where U : ISwiftObject, IPrintableProtocol
+{
+
+    private static nuint PayloadSize =  /* Extract size */;
+    private NativeHandle _payload;
+
+    public unsafe Pair(T first, U second)
+    {
+        _payload = new NativeHandle(NativeMemory.Alloc(PayloadSize));
+
+        SwiftIndirectResult swiftIndirectResult = new SwiftIndirectResult(_payload);
+
+        var firstMetadata = GetTypeMetadataOrThrow<T>();
+        var secondMetadata = GetTypeMetadataOrThrow<U>();
+
+        var nativeHandleFirst = Runtime.GetPayload(ref first);
+        var nativeHandleSecond = Runtime.GetPayload(ref second);
+
+        var printableProtocolWitnessTableT = ProtocolWitnessTable.GetProtocolWitnessTable<T, IPrintableProtocol>();
+        var printableProtocolWitnessTableU = ProtocolWitnessTable.GetProtocolWitnessTable<U, IPrintableProtocol>();
+
+        PairPInvokes.Pair(swiftIndirectResult, nativeHandleFirst, nativeHandleSecond, firstMetadata, secondMetadata, printableProtocolWitnessTableT, printableProtocolWitnessTableU);
+    }
+
+    public static TypeMetadata Metadata
+    {
+        /* This should be cached */
+        get
+        {
+            var firstMetadata = GetTypeMetadataOrThrow<T>();
+            var secondMetadata = GetTypeMetadataOrThrow<U>();
+
+            var printableProtocolWitnessTableT = ProtocolWitnessTable.GetProtocolWitnessTable<T, IPrintableProtocol>();
+            var printableProtocolWitnessTableU = ProtocolWitnessTable.GetProtocolWitnessTable<U, IPrintableProtocol>();
+
+            // Might be handled differently due to the metadata lowering https://github.com/dotnet/runtimelab/pull/2810
+
+            return PairPInvokes.PInvokeMetadata(TypeMetadataRequest.Complete, firstMetadata, secondMetadata, printableProtocolWitnessTableT, printableProtocolWitnessTableU);
+        }
+    }
+
+    // Other members
+}
+```
+
+### Supporting generic constraints on types present in both C\# and Swift
+
+When projecting a Swift type into C\#, we can project all of the protocols it conforms to as interfaces and make the C\# equivalent implement those interfaces. This allows it to work with the generic constraints mechanism described above.
+
+However, types that exist in both languages require special handling—for example, primitive number types. In Swift, primitive number types conform to multiple protocols that their C\# counterparts do not.
+
+Consider the following Swift code:
+
+```swift
+public func acceptHashable<T: Hashable>(T data) {}
+acceptHashable(data: 3)
+```
+
+This would map into c# as described above into:
+
+```csharp
+public interface IHashable
+{
+    public abstract static NativeHandle GetIHashableProtocolWitnessTable();
+}
+
+public static void AcceptHashable<T>(T data) where T : ISwiftObject, IHashable
+{
+    var metadata = TypeMetadata.GetTypeMetadataOrThrow<T>();
+    var protocolWitnessTable = ProtocolWitnessTable.GetProtocolWitnessTable<T, IHashable>();
+    PInvokeAcceptHashable(data.GetPayload(), metadata, protocolWitnessTable);
+}
+
+[DllImport(Path, EntryPoint = "...")]
+[UnmanagedCallConv(CallConvs = [typeof(CallConvSwift)])]
+private static extern void PInvokeAcceptHashable(NativeHandle data, TypeMetadata metadata, ProtocolWitnessTable protocolWitnessTable);
+```
+
+We would be able to call `AcceptHashable<T>` using a type that implements both `ISwiftObject` and `IHashable`, but we would not be able to call it using, for example, `System.Int64`.
+
+One way to solve this problem is by creating a wrapper struct for each of the types, which would implement the necessary interfaces:
+
+```csharp
+public struct SwiftIntWrapper : ISwiftObject, IHashable, ...
+{
+    nint value;
+
+    // Implement required methods and properties
+}
+```
+
+Before calling a function with generic constraints, the primitive value would have to be explicitly wrapped using these wrapper structs.
+
+**NOTE:** This makes an assumption that binary representation of value of a frozen struct with a single `Int` field is the same as of `Int` itself.
