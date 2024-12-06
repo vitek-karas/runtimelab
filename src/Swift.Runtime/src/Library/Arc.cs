@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 namespace Swift.Runtime;
 
 /// <summary>
-/// ARC is a class containing p/invokes for Swift Automatic Reference Counting and memory management.
+/// Arc is a class containing p/invokes for Swift Automatic Reference Counting and memory management.
 /// </summary>
 public static class Arc {
     const string swiftCore = "/usr/lib/swift/libswiftCore.dylib";
