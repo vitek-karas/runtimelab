@@ -24,11 +24,11 @@ public static class Arc {
     /// </summary>
     /// <param name="p">Pointer to an unmanaged Swift object, must be non-null.</param>
     /// <returns>The pointer passed in.</returns>
-    /// <exception cref="ArgumentOutOfRangeException">Throws if p is null</exception>
+    /// <exception cref="ArgumentNullException">Throws if p is null</exception>
     public static IntPtr Retain(IntPtr p)
     {
         if (p == IntPtr.Zero)
-            throw new ArgumentOutOfRangeException(nameof(p));
+            throw new ArgumentNullException(nameof(p));
         swift_retain(p);
         return p;
     }
@@ -47,11 +47,11 @@ public static class Arc {
     /// </summary>
     /// <param name="p">A non-null pointer to an unmanaged Swift object</param>
     /// <returns>True if and only if the pointer in the process of being deallocated.</returns>
-    /// <exception cref="ArgumentOutOfRangeException">Throws if p is null</exception>
+    /// <exception cref="ArgumentNullException">Throws if p is null</exception>
     public static bool IsDeallocating(IntPtr p)
     {
         if (p == IntPtr.Zero)
-            throw new ArgumentOutOfRangeException(nameof(p));
+            throw new ArgumentNullException(nameof(p));
         return swift_isDeallocating(p);
     }
 
@@ -67,12 +67,12 @@ public static class Arc {
     /// </summary>
     /// <param name="p">Pointer to an unmanaged Swift object, must be non-null.</param>
     /// <returns>The pointer passed in</returns>
-    /// <exception cref="ArgumentOutOfRangeException">Throws if p is null</exception>
+    /// <exception cref="ArgumentNullException">Throws if p is null</exception>
     /// <exception cref="Exception">Throws if p points to an object that has been deinitialized</exception>
     public static IntPtr Release(IntPtr p)
     {
         if (p == IntPtr.Zero)
-            throw new ArgumentOutOfRangeException(nameof(p));
+            throw new ArgumentNullException(nameof(p));
         if (swift_isDeallocating(p))
         {
             throw new Exception(string.Format ("Attempt to release a Swift object that has been deinitialized {0}", p.ToString($"X{IntPtr.Size * 2}")));
@@ -93,11 +93,11 @@ public static class Arc {
     /// </summary>
     /// <param name="p">Pointer to an unmanaged Swift object, must be non-null.</param>
     /// <returns>The pointer passed in</returns>
-    /// <exception cref="ArgumentOutOfRangeException">Throws if p is null</exception>
+    /// <exception cref="ArgumentNullException">Throws if p is null</exception>
     public static IntPtr UnownedRetain(IntPtr p)
     {
         if (p == IntPtr.Zero)
-            throw new ArgumentOutOfRangeException(nameof(p));
+            throw new ArgumentNullException(nameof(p));
         swift_unownedRetain(p);
         return p;
     }
@@ -114,11 +114,11 @@ public static class Arc {
     /// </summary>
     /// <param name="p">Pointer to an unmanaged Swift object, must be non-null.</param>
     /// <returns>The pointer passed in</returns>
-    /// <exception cref="ArgumentOutOfRangeException">Throws if p is null</exception>
+    /// <exception cref="ArgumentNullException">Throws if p is null</exception>
     public static IntPtr UnownedRelease(IntPtr p)
     {
         if (p == IntPtr.Zero)
-            throw new ArgumentOutOfRangeException(nameof(p));
+            throw new ArgumentNullException(nameof(p));
         swift_unownedRelease(p);
         return p;
     }
@@ -136,11 +136,11 @@ public static class Arc {
     /// </summary>
     /// <param name="p">Pointer to an unmanaged Swift object, must be non-null.</param>
     /// <returns>The retain count</returns>
-    /// <exception cref="ArgumentOutOfRangeException">Throws if p is null</exception>
+    /// <exception cref="ArgumentNullException">Throws if p is null</exception>
     public static nint RetainCount(IntPtr p)
     {
         if (p == IntPtr.Zero)
-            throw new ArgumentOutOfRangeException(nameof(p));
+            throw new ArgumentNullException(nameof(p));
         return swift_retainCount(p);
     }
 
@@ -157,11 +157,11 @@ public static class Arc {
     /// </summary>
     /// <param name="p">Pointer to an unmanaged Swift object, must be non-null.</param>
     /// <returns>The unowned retain count</returns>
-    /// <exception cref="ArgumentOutOfRangeException">Throws if p is null</exception>
+    /// <exception cref="ArgumentNullException">Throws if p is null</exception>
     public static nint UnownedRetainCount(IntPtr p)
     {
         if (p == IntPtr.Zero)
-            throw new ArgumentOutOfRangeException(nameof(p));
+            throw new ArgumentNullException(nameof(p));
         return swift_unownedRetainCount(p);
     }
 }
