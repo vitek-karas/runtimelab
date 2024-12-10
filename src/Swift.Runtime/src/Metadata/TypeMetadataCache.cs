@@ -12,7 +12,7 @@ namespace Swift.Runtime;
 /// </summary>
 internal class TypeMetadataCache : ITypeMetadataCache
 {
-    ConcurrentDictionary<Type, TypeMetadata> cache = new();
+    readonly ConcurrentDictionary<Type, TypeMetadata> cache = new();
 
     /// <summary>
     /// Constructs an empty cache.
@@ -25,8 +25,8 @@ internal class TypeMetadataCache : ITypeMetadataCache
     /// <summary>
     /// Constructs a cache with the supplied initial values.
     /// </summary>
-    /// <param name="initalValues">An enumeration of tuples of Type and TypeMetadata to initialize the cache</param>
-    public TypeMetadataCache(IEnumerable<(Type, TypeMetadata)> initalValues)
+    /// <param name="initialValues">An enumeration of tuples of Type and TypeMetadata to initialize the cache</param>
+    public TypeMetadataCache(IEnumerable<(Type, TypeMetadata)> initialValues)
     {
         var dictCache = (IDictionary<Type, TypeMetadata>)cache;
         foreach (var (key, value) in initalValues)
@@ -39,23 +39,23 @@ internal class TypeMetadataCache : ITypeMetadataCache
     /// <summary>
     /// Returns true if and only if the cache contains an entry for t.
     /// </summary>
-    /// <param name="t">The type to look up in the cache</param>
+    /// <param name="type">The type to look up in the cache</param>
     /// <returns>true if and only if the cache contains t, false otherwise</returns>
-    public bool Contains(Type t)
+    public bool Contains(Type type)
     {
-        return cache.ContainsKey(t);
+        return cache.ContainsKey(type);
     }
 
     /// <summary>
     /// Returns true if the cache contains an entry for t and sets metadata to the resulting value,
     /// otherwise it returns false and metadata will be null.
     /// </summary>
-    /// <param name="t"></param>
+    /// <param name="type"></param>
     /// <param name="metadata"></param>
     /// <returns>true if the lookup was successful, false otherwise</returns>
-    public bool TryGet(Type t, [NotNullWhen(true)] out TypeMetadata? metadata)
+    public bool TryGet(Type type, [NotNullWhen(true)] out TypeMetadata? metadata)
     {
-        if (cache.TryGetValue(t, out var md))
+        if (cache.TryGetValue(type, out var md))
         {
             metadata = md;
             return true;
@@ -71,11 +71,11 @@ internal class TypeMetadataCache : ITypeMetadataCache
     /// Gets the TypeMetadata for the given Type t or if it is not present,
     /// adds it to the cache using the given factory to generate the value.
     /// </summary>
-    /// <param name="t"></param>
+    /// <param name="type"></param>
     /// <param name="metadataFactory"></param>
     /// <returns>The TypeMetadata associated with the give Type t</returns>
-    public TypeMetadata GetOrAdd(Type t, Func<Type, TypeMetadata> metadataFactory)
+    public TypeMetadata GetOrAdd(Type type, Func<Type, TypeMetadata> metadataFactory)
     {
-        return cache.GetOrAdd(t, metadataFactory);
+        return cache.GetOrAdd(type, metadataFactory);
     }
 }

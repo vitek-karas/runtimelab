@@ -244,7 +244,7 @@ public readonly struct TypeMetadata : IEquatable<TypeMetadata> {
         return handle.GetHashCode ();
     }
 
-    static TypeMetadataCache cache;
+    static readonly TypeMetadataCache cache;
     /// <summary>
     /// Gets the type metadata cache for the runtime.
     /// </summary>
