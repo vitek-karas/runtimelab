@@ -29,7 +29,7 @@ internal class TypeMetadataCache : ITypeMetadataCache
     public TypeMetadataCache(IEnumerable<(Type, TypeMetadata)> initialValues)
     {
         var dictCache = (IDictionary<Type, TypeMetadata>)cache;
-        foreach (var (key, value) in initalValues)
+        foreach (var (key, value) in initialValues)
         {
             dictCache.Add(key, value);
         }
