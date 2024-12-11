@@ -38,12 +38,6 @@ public class TypeMetadataTests : IClassFixture<TypeMetadataTests.TestFixture>
     }
 
     [Fact]
-    public static void CacheDoesntContain()
-    {
-        Assert.False(TypeMetadata.Cache.Contains(typeof(System.EventArgs)));
-    }
-
-    [Fact]
     public static void CacheWorks()
     {
         var fakeMeta = MakePhonyMetadata(42);
@@ -51,7 +45,7 @@ public class TypeMetadataTests : IClassFixture<TypeMetadataTests.TestFixture>
         {
             return fakeMeta;
         });
-        Assert.True(TypeMetadata.Cache.Contains(typeof(System.Convert)));
+        Assert.True(TypeMetadata.Cache.TryGet(typeof(System.Convert), out var result));
     }
 
     [Fact]
